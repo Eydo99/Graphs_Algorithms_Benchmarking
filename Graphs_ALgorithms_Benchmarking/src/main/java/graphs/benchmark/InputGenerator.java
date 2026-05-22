@@ -5,7 +5,7 @@ import graphs.model.Graph;
 import java.util.Random;
 
 public  class InputGenerator {
-    private static final int V=5000;
+    private static  int V;
     private static final int seed=42;
 
     public static Graph generateSparseGraph() {
@@ -82,5 +82,9 @@ public  class InputGenerator {
             graph.addEdge(u,v,weight);
             remainingEdges--;
         }
+    }
+
+    public static void setV(int v) {
+        V = v;
     }
 }

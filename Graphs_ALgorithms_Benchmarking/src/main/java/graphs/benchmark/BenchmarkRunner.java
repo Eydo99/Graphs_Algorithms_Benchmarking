@@ -2,11 +2,42 @@ package graphs.benchmark;
 
 import graphs.model.Graph;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Scanner;
+
 public class BenchmarkRunner {
+    private static int RUNS;
+    private static final int DEFAULT_RUNS = 20;
+    private static final int DEFAULT_SIZE=5000;
+    private static final int WARM_UPS=10;
+    private static final String CSV_FILE = "results.csv";
 
-    private static final int RUNS = 10;
+    public static void main(String[] args) throws IOException {
 
-    public static void main(String[] args) {
+        initCSV();
+        Scanner scanner=new Scanner(System.in);
+        System.out.print("What is the size of input do you want to benchmark (Enter 0 for default size): ");
+        int size=scanner.nextInt();
+        while (size<0)
+        {
+            System.out.println("size of input must be at least one");
+            System.out.print("What is the size of input do you want to benchmark: ");
+            size=scanner.nextInt();
+        }
+        size= (size==0) ? DEFAULT_SIZE : size;
+        InputGenerator.setV(size);
+
+        System.out.print("How many runs do you want for the benchmark (Enter 0 for default runs): ");
+        RUNS=scanner.nextInt();
+        while(RUNS<0)
+        {
+            System.out.println("the benchmark need at least one run");
+            System.out.print("How many runs do you want for the benchmark: ");
+            RUNS=scanner.nextInt();
+        }
+        RUNS= (RUNS==0) ? DEFAULT_RUNS : RUNS;
 
         System.out.println("Generating graphs...");
         Graph sparse   = InputGenerator.generateSparseGraph();
@@ -43,15 +74,22 @@ public class BenchmarkRunner {
         double speedupMedian  = dijkstraMedian / dagMedian;
 
         printTableHeader("Algorithm", "Mean (µs)", "Median (µs)", "Std Dev (µs)", "Speedup");
-        printTableRow("Dijkstra on DAG",  dijkstraMean,  dijkstraMedian,  Stats.standardDeviation(dijkstraTimes), "—");
-        printTableRow("DAG Shortest Path", dagMean,      dagMedian,       Stats.standardDeviation(dagTimes),      "—");
+        printTableRow("Dijkstra on DAG",   dijkstraMean,  dijkstraMedian,  Stats.standardDeviation(dijkstraTimes), "—");
+        printTableRow("DAG Shortest Path", dagMean,       dagMedian,       Stats.standardDeviation(dagTimes),      "—");
         printSpeedupRow(speedupMean, speedupMedian);
+
+        writeToCSV("DAG_SSSP", "DAG", "Dijkstra",        dijkstraMean,  dijkstraMedian,  Stats.standardDeviation(dijkstraTimes));
+        writeToCSV("DAG_SSSP", "DAG", "DAG Shortest Path", dagMean,     dagMedian,       Stats.standardDeviation(dagTimes));
+
+        System.out.println("\nResults written to " + CSV_FILE);
     }
 
     // ── Measurement helpers (milliseconds) ───────────────────────────────────────
 
     private static long[] measurePrim(Graph g) {
-        g.primMST(); g.primMST(); // warmup
+        for (int i=0;i<WARM_UPS;i++)
+            g.primMST();
+
         long[] times = new long[RUNS];
         for (int i = 0; i < RUNS; i++) {
             long start = System.nanoTime();
@@ -62,7 +100,8 @@ public class BenchmarkRunner {
     }
 
     private static long[] measureKruskal(Graph g) {
-        g.kruskalMST(); g.kruskalMST(); // warmup
+        for (int i=0;i<WARM_UPS;i++)
+            g.kruskalMST();
         long[] times = new long[RUNS];
         for (int i = 0; i < RUNS; i++) {
             long start = System.nanoTime();
@@ -73,7 +112,8 @@ public class BenchmarkRunner {
     }
 
     private static long[] measureDijkstra(Graph g) {
-        g.dijkstra(0); g.dijkstra(0); // warmup
+        for (int i=0;i<WARM_UPS;i++)
+            g.dijkstra(0);
         long[] times = new long[RUNS];
         for (int i = 0; i < RUNS; i++) {
             long start = System.nanoTime();
@@ -83,10 +123,11 @@ public class BenchmarkRunner {
         return times;
     }
 
-    // ── Measurement helpers (microseconds) — used for DAG comparison ─────────────
+    // ── Measurement helpers (microseconds) ───────────────────────────────────────
 
     private static long[] measureDijkstraMicro(Graph g) {
-        g.dijkstra(0); g.dijkstra(0); // warmup
+        for (int i=0;i<WARM_UPS;i++)
+            g.dijkstra(0);
         long[] times = new long[RUNS];
         for (int i = 0; i < RUNS; i++) {
             long start = System.nanoTime();
@@ -97,7 +138,8 @@ public class BenchmarkRunner {
     }
 
     private static long[] measureDAGMicro(Graph g) {
-        g.dagShortestPath(0); g.dagShortestPath(0); // warmup
+        for (int i=0;i<WARM_UPS;i++)
+            g.dagShortestPath(0);
         long[] times = new long[RUNS];
         for (int i = 0; i < RUNS; i++) {
             long start = System.nanoTime();
@@ -107,9 +149,9 @@ public class BenchmarkRunner {
         return times;
     }
 
-    // ── Print helpers ─────────────────────────────────────────────────────────────
+    // ── Print + CSV helpers ───────────────────────────────────────────────────────
 
-    private static void printMSTRow(String label, Graph g) {
+    private static void printMSTRow(String label, Graph g) throws IOException {
         long[] primTimes    = measurePrim(g);
         long[] kruskalTimes = measureKruskal(g);
 
@@ -117,13 +159,19 @@ public class BenchmarkRunner {
         printTableHeader("Algorithm", "Mean (ms)", "Median (ms)", "Std Dev (ms)", "");
         printTableRow("Prim",    Stats.mean(primTimes),    Stats.median(primTimes),    Stats.standardDeviation(primTimes),    "");
         printTableRow("Kruskal", Stats.mean(kruskalTimes), Stats.median(kruskalTimes), Stats.standardDeviation(kruskalTimes), "");
+
+        writeToCSV("MST", label, "Prim",    Stats.mean(primTimes),    Stats.median(primTimes),    Stats.standardDeviation(primTimes));
+        writeToCSV("MST", label, "Kruskal", Stats.mean(kruskalTimes), Stats.median(kruskalTimes), Stats.standardDeviation(kruskalTimes));
     }
 
-    private static void printDijkstraRow(String label, Graph g) {
+    private static void printDijkstraRow(String label, Graph g) throws IOException {
         long[] times = measureDijkstra(g);
+
         System.out.println("\n  Graph: " + label);
         printTableHeader("Algorithm", "Mean (ms)", "Median (ms)", "Std Dev (ms)", "");
         printTableRow("Dijkstra", Stats.mean(times), Stats.median(times), Stats.standardDeviation(times), "");
+
+        writeToCSV("SSSP", label, "Dijkstra", Stats.mean(times), Stats.median(times), Stats.standardDeviation(times));
     }
 
     private static void printSectionHeader(String title) {
@@ -144,5 +192,20 @@ public class BenchmarkRunner {
     private static void printSpeedupRow(double speedupMean, double speedupMedian) {
         System.out.println("  " + "-".repeat(73));
         System.out.printf("  %-25s %12.2fx %13.2fx%n", "Speedup (Dijkstra/DAG)", speedupMean, speedupMedian);
+    }
+
+    private static void initCSV() throws IOException {
+        FileWriter fw = new FileWriter(CSV_FILE, false);
+        PrintWriter pw = new PrintWriter(fw);
+        pw.println("Section,Graph,Algorithm,Mean,Median,StdDev");
+        pw.close();
+    }
+
+    private static void writeToCSV(String section, String graph, String algorithm,
+                                   double mean, double median, double stdDev) throws IOException {
+        FileWriter fw = new FileWriter(CSV_FILE, true);
+        PrintWriter pw = new PrintWriter(fw);
+        pw.printf("%s,%s,%s,%.2f,%.2f,%.2f%n", section, graph, algorithm, mean, median, stdDev);
+        pw.close();
     }
 }

@@ -216,4 +216,46 @@ public class GraphAlgorithmsTest {
 
         assertArrayEquals(dijkstraDist, dagDist);
     }
+
+    // ─── Additional Tests ─────────────────────────────────────────────────────────
+
+    @Test
+    void dijkstra_unreachableVertex() {
+        // Disconnected graph: 0-1 connected, 2-3 connected, no edge between groups
+        Graph g = new Graph(4);
+        g.addEdge(0, 1, 5);
+        g.addEdge(2, 3, 5);
+        int[] dist = g.dijkstra(0);
+        assertEquals(0, dist[0]);
+        assertEquals(5, dist[1]);
+        assertEquals(Integer.MAX_VALUE, dist[2]);
+        assertEquals(Integer.MAX_VALUE, dist[3]);
+    }
+
+    @Test
+    void primAndKruskal_parallelEdges() {
+        // Two edges between same vertices — should pick the lighter one
+        Graph g = new Graph(3);
+        g.addEdge(0, 1, 10);
+        g.addEdge(0, 1, 2); // lighter parallel edge
+        g.addEdge(1, 2, 3);
+        int primWeight    = g.primMST().stream().mapToInt(e -> e.weight).sum();
+        int kruskalWeight = g.kruskalMST().stream().mapToInt(e -> e.weight).sum();
+        assertEquals(5, primWeight);
+        assertEquals(5, kruskalWeight);
+    }
+
+    @Test
+    void dag_unreachableVertices() {
+        // Source is 1, vertex 0 has no incoming edges from 1
+        Graph dag = new Graph(4);
+        dag.addDirectedEdge(0, 2, 3);
+        dag.addDirectedEdge(1, 2, 1);
+        dag.addDirectedEdge(2, 3, 2);
+        int[] dist = dag.dagShortestPath(1);
+        assertEquals(Integer.MAX_VALUE, dist[0]); // unreachable
+        assertEquals(0,                dist[1]);
+        assertEquals(1,                dist[2]);
+        assertEquals(3,                dist[3]);
+    }
 }

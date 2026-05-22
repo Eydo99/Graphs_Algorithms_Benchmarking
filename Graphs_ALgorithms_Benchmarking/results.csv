@@ -1,0 +1,13 @@
+Section,Graph,Algorithm,Mean,Median,StdDev
+MST,Sparse,Prim,1.48,1.00,0.50
+MST,Sparse,Kruskal,2.58,2.00,2.97
+MST,Dense,Prim,28.92,29.00,0.59
+MST,Dense,Kruskal,316.96,317.00,5.00
+MST,Complete,Prim,39.48,39.00,3.03
+MST,Complete,Kruskal,1141.30,1140.00,28.03
+SSSP,Sparse,Dijkstra,1.00,1.00,0.00
+SSSP,Dense,Dijkstra,124.78,124.00,2.19
+SSSP,Complete,Dijkstra,233.94,233.00,2.94
+SSSP,DAG,Dijkstra,0.00,0.00,0.00
+DAG_SSSP,DAG,Dijkstra,760.52,749.50,31.10
+DAG_SSSP,DAG,DAG Shortest Path,537.96,540.00,66.13

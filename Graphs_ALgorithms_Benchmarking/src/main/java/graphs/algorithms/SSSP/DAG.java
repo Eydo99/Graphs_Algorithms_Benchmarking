@@ -7,13 +7,12 @@ import java.util.List;
 import java.util.Stack;
 
 public class DAG implements  SSSPStrategy{
-    int[] colours;
-    Stack<Integer> stack=new Stack<>();
 
     @Override
     public int[] computeSSSP(Graph graph,int source) {
-        this.colours = new int[graph.getV()];
-        if (!topo_sort(graph))
+        int[] colours = new int[graph.getV()];
+        Stack<Integer> stack=new Stack<>();
+        if (!topo_sort(graph,colours,stack))
             throw new IllegalArgumentException("Cycle detected");
         int[] dist = new int[graph.getV()];
         for(int i=0;i<graph.getV();i++)
@@ -33,23 +32,23 @@ public class DAG implements  SSSPStrategy{
         return dist;
     }
 
-    private boolean topo_sort(Graph graph)
+    private boolean topo_sort(Graph graph,int[] colours,Stack<Integer> stack)
     {
         for(int i=0;i< graph.getV();i++)
         {
             if(colours[i]==0)
-                if(DFS_Visit(i, graph.getAdjList())) return false;
+                if(DFS_Visit(i, graph.getAdjList(),colours,stack)) return false;
         }
         return true;
     }
-    private boolean DFS_Visit(int node,List<List<Edge>> adjList)
+    private boolean DFS_Visit(int node,List<List<Edge>> adjList,int[] colours, Stack<Integer> stack)
     {
         colours[node]=1;
         for(Edge e:adjList.get(node))
         {
             if(colours[e.v]==1) return true;
             else if(colours[e.v]==0)
-                if(DFS_Visit(e.v, adjList)) return true;
+                if(DFS_Visit(e.v, adjList,colours,stack)) return true;
 
         }
         colours[node]=2;
