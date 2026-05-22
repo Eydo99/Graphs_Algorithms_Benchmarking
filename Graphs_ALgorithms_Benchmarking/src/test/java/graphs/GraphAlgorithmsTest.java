@@ -157,7 +157,7 @@ public class GraphAlgorithmsTest {
         dag.addDirectedEdge(1, 3, 5);
         dag.addDirectedEdge(2, 3, 1);
 
-        int[] dist = dag.DAG(0);
+        int[] dist = dag.dagShortestPath(0);
         assertEquals(0, dist[0]);
         assertEquals(1, dist[1]);
         assertEquals(3, dist[2]); // 0->1->2 = 3
@@ -170,7 +170,7 @@ public class GraphAlgorithmsTest {
         dag.addDirectedEdge(0, 1, 10);
         dag.addDirectedEdge(1, 2, 5);
 
-        int[] dist = dag.DAG(1);
+        int[] dist = dag.dagShortestPath(1);
         // node 0 is unreachable from source 1
         assertEquals(Integer.MAX_VALUE, dist[0]);
         assertEquals(0, dist[1]);
@@ -184,13 +184,13 @@ public class GraphAlgorithmsTest {
         cyclic.addDirectedEdge(1, 2, 1);
         cyclic.addDirectedEdge(2, 0, 1); // cycle!
 
-        assertThrows(IllegalArgumentException.class, () -> cyclic.DAG(0));
+        assertThrows(IllegalArgumentException.class, () -> cyclic.dagShortestPath(0));
     }
 
     @Test
     void dag_singleVertex() {
         Graph g = new Graph(1);
-        int[] dist = g.DAG(0);
+        int[] dist = g.dagShortestPath(0);
         assertEquals(0, dist[0]);
     }
 
@@ -211,7 +211,7 @@ public class GraphAlgorithmsTest {
         dag2.addDirectedEdge(1, 3, 8);
         dag2.addDirectedEdge(2, 3, 1);
 
-        int[] dagDist      = dag1.DAG(0);
+        int[] dagDist      = dag1.dagShortestPath(0);
         int[] dijkstraDist = dag2.dijkstra(0);
 
         assertArrayEquals(dijkstraDist, dagDist);

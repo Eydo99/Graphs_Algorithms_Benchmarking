@@ -13,21 +13,34 @@ public class Prim implements MSTStrategy {
 
     @Override
     public List<Edge> computeMST(Graph graph) {
+        int V=graph.getV();
         boolean[] visited=new boolean[graph.getV()];
-        PriorityQueue<Edge> pq=new PriorityQueue<>(Comparator.comparingInt(e -> e.weight));
+        int[]     minWeight = new int[graph.getV()];
+        int[]     parent    = new int[graph.getV()];
+        for (int i = 0; i < V; i++) {
+            minWeight[i] = Integer.MAX_VALUE;
+            parent[i]    = -1;
+        }
+        minWeight[0]=0;
+        PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
+        pq.add(new int[]{0, 0});
         List<Edge> res=new ArrayList<>();
-        pq.add(new Edge(-1,0,0));
 
         while (!pq.isEmpty()) {
-            Edge e=pq.poll();
-            if(!visited[e.v]){
-                visited[e.v]=true;
-                if(e.u!=-1) res.add(e);
-                for( Edge edge : graph.getAdjList().get(e.v) ) {
-                    if(!visited[edge.v]){pq.add(edge);}
+            int[] curr = pq.poll();
+            int v      = curr[0];
+            int weight = curr[1];
+            if (visited[v]) continue;
+            visited[v] = true;
+            if (parent[v] != -1)
+                res.add(new Edge(parent[v], v, weight));
+            for (Edge e : graph.getAdjList().get(v)) {
+                if (!visited[e.v] && e.weight < minWeight[e.v]) {
+                    minWeight[e.v] = e.weight;
+                    parent[e.v]    = v;
+                    pq.add(new int[]{e.v, e.weight});
                 }
             }
-
         }
         return res;
     }

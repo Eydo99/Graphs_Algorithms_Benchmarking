@@ -27,10 +27,11 @@ public class Graph {
 
 
     public void addEdge(int u, int v, int weight) {
-        Edge e = new Edge(u, v, weight);
-        edges.add(e);
-        adjList.get(u).add(e);
-        adjList.get(v).add(e);
+        Edge e1 = new Edge(u, v, weight);
+        edges.add(e1);
+        adjList.get(u).add(e1);
+        Edge e2 = new Edge(v, u, weight);
+        adjList.get(v).add(e2);
     }
     public void addDirectedEdge(int u, int v, int weight) {
         Edge e = new Edge(u, v, weight);
@@ -52,7 +53,7 @@ public class Graph {
         return dijkstra.computeSSSP(this,source);
     }
 
-    public int[] DAG(int source) {
+    public int[] dagShortestPath(int source) {
         DAG dag = new DAG();
         return dag.computeSSSP(this,source);
     }
