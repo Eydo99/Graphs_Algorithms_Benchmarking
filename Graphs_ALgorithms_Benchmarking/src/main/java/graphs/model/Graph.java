@@ -1,7 +1,10 @@
 package graphs.model;
 
+import graphs.algorithms.MST.Kruskal;
 import graphs.algorithms.MST.MSTStrategy;
 import graphs.algorithms.MST.Prim;
+import graphs.algorithms.SSSP.DAG;
+import graphs.algorithms.SSSP.Dijkstra;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +38,23 @@ public class Graph {
         adjList.get(u).add(e);
     }
 
-    public List<Edge> PrimMST() {
+    public List<Edge> primMST() {
         Prim prim = new Prim();
-        List<Edge> res=prim.computeMST()
+        return prim.computeMST(this);
+    }
+    public List<Edge> kruskalMST() {
+        Kruskal kruskal = new Kruskal();
+        return kruskal.computeMST(this);
+    }
+
+    public int[] dijkstra(int source) {
+        Dijkstra dijkstra = new Dijkstra();
+        return dijkstra.computeSSSP(this,source);
+    }
+
+    public int[] DAG(int source) {
+        DAG dag = new DAG();
+        return dag.computeSSSP(this,source);
     }
 
     public int getV() {
